@@ -21,6 +21,7 @@ limitations under the License.
 #pragma warning(disable: 4324)
 #include "Win32_DirectXAppUtil.h" // DirectX Helper
 #include "OVR_CAPI_D3D.h" // Oculus SDK
+#include "openvr.h"
 #include <chrono>
 DirectX11 DIRECTX;
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> high_resolution_clock;
@@ -58,6 +59,7 @@ private:
     ID3D11DepthStencilView* mEyeDepthTarget[ovrEye_Count] = {};             // DX11 - Eye depth view
     std::vector<ID3D11RenderTargetView*> mEyeRenderTargets[ovrEye_Count];   // DX11 - Eye render view
 	std::vector<ovrVector3f> mBoundaryPoints;
+	std::vector<ovrTrackerPose> mTrackerPoses;
 
     bool mShouldQuit = false;
     bool mSlowMotionMode = false;                                           // Slow motion gets enabled when too close to the boundary
@@ -144,6 +146,8 @@ void GuardianSystemDemo::InitSceneGraph()
 
 void GuardianSystemDemo::Start(HINSTANCE hinst)
 {
+
+
     ovrResult result;
     result = ovr_Initialize(nullptr);
     if (!OVR_SUCCESS(result)) {
@@ -167,7 +171,8 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
     }
 
     // Use FloorLevel tracking origin
-    ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_FloorLevel);
+    //ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_FloorLevel);
+	ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_EyeLevel);
 
 	int boundaryNum;
 	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, NULL, &boundaryNum))) {
@@ -178,6 +183,42 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, mBoundaryPoints.data(), &boundaryNum))) {
 		printf("Getting boundary points failed"); exit(-1);
 	}
+
+	unsigned int numOfTrackers = ovr_GetTrackerCount(mSession);
+	mTrackerPoses.resize(numOfTrackers);
+	for (unsigned int i = 0; i < numOfTrackers; i++) {
+		mTrackerPoses[i] = ovr_GetTrackerPose(mSession, i);
+	}
+
+	//ovr_Shutdown();
+
+	vr::EVRInitError initError;
+	vr::IVRSystem* ivrSystem = vr::VR_Init(&initError, vr::EVRApplicationType::VRApplication_Scene);
+
+	std::vector<vr::TrackedDevicePose_t> poses;
+
+	poses.resize(vr::k_unMaxTrackedDeviceCount);
+
+	ivrSystem->GetDeviceToAbsoluteTrackingPose(vr::ETrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated, 0.0, poses.data(), vr::k_unMaxTrackedDeviceCount);
+
+	std::vector<vr::TrackedDevicePose_t> cameraPoses;
+
+	for (unsigned int i = 0; i < poses.size(); ++i) {
+		if (ivrSystem->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_TrackingReference) {
+			cameraPoses.push_back(poses[i]);
+		}
+	}
+
+	uint32_t quadCount;
+
+	vr::VRChaperoneSetup()->RevertWorkingCopy();
+	vr::VRChaperoneSetup()->GetLivePhysicalBoundsInfo(NULL, &quadCount);
+	std::vector<vr::HmdQuad_t> quads;
+	quads.resize(quadCount);
+	vr::VRChaperoneSetup()->GetLivePhysicalBoundsInfo(quads.data(), &quadCount);
+
+	//exit(0);
+
     
     InitRenderTargets(hmdDesc);
     InitSceneGraph();
@@ -197,7 +238,10 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
         Render();
     }
 
+
     ovr_Shutdown();
+
+
 }
 
 
@@ -221,6 +265,7 @@ float GuardianSystemDemo::UpdateTimeWithBoundaryTest()
 
     mGlobalTimeSec += elapsedTimeSec;
     srand((uint32_t)mGlobalTimeSec);
+
     return elapsedTimeSec;
 }
 
