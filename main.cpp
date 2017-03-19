@@ -216,7 +216,7 @@ float GuardianSystemDemo::UpdateTimeWithBoundaryTest()
     const float kStopMotionDistance = 0.1f;         // Stops motion at 10cm
     const float kMotionDistanceRange = kSlowMotionStartDistance - kStopMotionDistance;
     if (test.ClosestDistance < kSlowMotionStartDistance) {
-        elapsedTimeSec *= (max(0.0f, test.ClosestDistance - kStopMotionDistance) / kMotionDistanceRange);
+        //elapsedTimeSec *= (max(0.0f, test.ClosestDistance - kStopMotionDistance) / kMotionDistanceRange);
     }
 
     mGlobalTimeSec += elapsedTimeSec;
