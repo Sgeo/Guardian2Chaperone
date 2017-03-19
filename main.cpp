@@ -57,6 +57,7 @@ private:
     ovrTextureSwapChain mTextureChain[ovrEye_Count] = {};                   // OVR  - Eye render target swap chain
     ID3D11DepthStencilView* mEyeDepthTarget[ovrEye_Count] = {};             // DX11 - Eye depth view
     std::vector<ID3D11RenderTargetView*> mEyeRenderTargets[ovrEye_Count];   // DX11 - Eye render view
+	std::vector<ovrVector3f> mBoundaryPoints;
 
     bool mShouldQuit = false;
     bool mSlowMotionMode = false;                                           // Slow motion gets enabled when too close to the boundary
@@ -167,6 +168,16 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
     // Use FloorLevel tracking origin
     ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_FloorLevel);
+
+	int boundaryNum;
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, NULL, &boundaryNum))) {
+		printf("Getting number of boundary points failed"); exit(-1);
+	}
+
+	mBoundaryPoints.resize(boundaryNum);
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, mBoundaryPoints.data(), &boundaryNum))) {
+		printf("Getting boundary points failed"); exit(-1);
+	}
     
     InitRenderTargets(hmdDesc);
     InitSceneGraph();
@@ -235,15 +246,26 @@ void GuardianSystemDemo::UpdateObjectsCollisionWithBoundary(float elapsedTimeSec
 
     for (int32_t i = 0; i < mDynamicScene.numModels; ++i) {
         XMFLOAT3 newPosition;
-        XMVECTOR newPositionVec = XMVectorAdd(mObjPosition[i], XMVectorScale(mObjVelocity[i], elapsedTimeSec));
-        XMStoreFloat3(&newPosition, newPositionVec);
+		XMVECTOR newPositionVec;
+		if ((size_t)i < mBoundaryPoints.size()) {
+			newPosition.x = mBoundaryPoints[i].x;
+			newPosition.y = mBoundaryPoints[i].y;
+			newPosition.z = mBoundaryPoints[i].z;
+			newPositionVec = XMLoadFloat3(&newPosition);
+		}
+		else {
+			newPositionVec = XMVectorAdd(mObjPosition[i], XMVectorScale(mObjVelocity[i], elapsedTimeSec));
+			XMStoreFloat3(&newPosition, newPositionVec);
+		}
+
 
         // Test object collision with boundary
         ovrBoundaryTestResult test;
         ovr_TestBoundaryPoint(mSession, (ovrVector3f*)&newPosition.x, ovrBoundary_Outer, &test);
 
         // Collides with surface at 2cm
-        if (test.ClosestDistance < 0.02f) {
+        //if (test.ClosestDistance < 0.02f) {
+		if (FALSE) {
             XMVECTOR surfaceNormal = XMVectorSet(test.ClosestPointNormal.x, test.ClosestPointNormal.y, test.ClosestPointNormal.z, 0.0f);
             mObjVelocity[i] = XMVector3Reflect(mObjVelocity[i], surfaceNormal);
 
