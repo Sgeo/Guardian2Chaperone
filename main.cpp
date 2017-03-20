@@ -175,19 +175,41 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_EyeLevel);
 
 	int boundaryNum;
-	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, NULL, &boundaryNum))) {
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, NULL, &boundaryNum))) {
 		printf("Getting number of boundary points failed"); exit(-1);
 	}
 
 	mBoundaryPoints.resize(boundaryNum);
-	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, mBoundaryPoints.data(), &boundaryNum))) {
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, mBoundaryPoints.data(), &boundaryNum))) {
 		printf("Getting boundary points failed"); exit(-1);
 	}
+
+	ovrVector3f origin;
+
+	origin.x = 0;
+	origin.y = 0;
+	origin.z = 0;
+
+	for (unsigned int i = 0; i < mBoundaryPoints.size(); ++i) {
+		origin.x += mBoundaryPoints[i].x;
+		origin.y += mBoundaryPoints[i].y;
+		origin.z += mBoundaryPoints[i].z;
+	}
+
+	int numOfPoints = mBoundaryPoints.size();
+	origin.x = origin.x / (float)numOfPoints;
+	origin.y = origin.y / (float)numOfPoints;
+	origin.z = origin.z / (float)numOfPoints;
+
+	//origin.y *= -1; // I don't know why they're upside down relative to each other.
+
+	printf("%f, %f, %f", origin.x, origin.y, origin.z);
 
 	unsigned int numOfTrackers = ovr_GetTrackerCount(mSession);
 	mTrackerPoses.resize(numOfTrackers);
 	for (unsigned int i = 0; i < numOfTrackers; i++) {
-		mTrackerPoses[i] = ovr_GetTrackerPose(mSession, i);
+		ovrTrackerPose trackerPose = ovr_GetTrackerPose(mSession, i);
+		mTrackerPoses[i] = trackerPose;
 	}
 
 	//ovr_Shutdown();
@@ -211,13 +233,40 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
 	uint32_t quadCount;
 
-	vr::VRChaperoneSetup()->RevertWorkingCopy();
-	vr::VRChaperoneSetup()->GetLivePhysicalBoundsInfo(NULL, &quadCount);
-	std::vector<vr::HmdQuad_t> quads;
-	quads.resize(quadCount);
-	vr::VRChaperoneSetup()->GetLivePhysicalBoundsInfo(quads.data(), &quadCount);
+	auto chaperoneStatus = vr::VRChaperone()->GetCalibrationState(); // REQUIRED in order to do any chaperone setup
 
-	//exit(0);
+	//auto trackingSpace = vr::VRCompositor()->GetTrackingSpace();
+
+	vr::VRChaperoneSetup()->RevertWorkingCopy();
+	vr::HmdMatrix34_t standingZero;
+	vr::VRChaperoneSetup()->GetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
+	for (unsigned int i = 0; i < 3; i++) {
+		for (unsigned int j = 0; j < 4; j++) {
+			//standingZero.m[i][j] = 0;
+		}
+	}
+	//standingZero.m[1][3] = 5;
+	standingZero.m[0][3] = origin.x;
+	standingZero.m[1][3] = origin.y;
+	standingZero.m[2][3] = origin.z;
+	
+	vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
+	vr::VRChaperoneSetup()->CommitWorkingCopy(vr::EChaperoneConfigFile_Live);
+	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
+	//vr::VRChaperone()->ReloadInfo();
+	//vr::VRChaperoneSetup()->GetWorkingCollisionBoundsInfo(NULL, &quadCount);
+	//std::vector<vr::HmdQuad_t> quads;
+	//quads.resize(quadCount);
+	//vr::VRChaperoneSetup()->GetWorkingCollisionBoundsInfo(quads.data(), &quadCount);
+	//vr::HmdMatrix34_t poseMatrix;
+	//bool getPoseResult = vr::VRChaperoneSetup()->GetWorkingStandingZeroPoseToRawTrackingPose(&poseMatrix);
+	//quads.clear();
+	//vr::VRChaperoneSetup()->SetWorkingCollisionBoundsInfo(quads.data(), 0);
+	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
+	//vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose
+
+
+	exit(0);
 
     
     InitRenderTargets(hmdDesc);
