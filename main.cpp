@@ -184,6 +184,12 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 		printf("Getting boundary points failed"); exit(-1);
 	}
 
+
+	ovrVector3f dimensions;
+	if (!OVR_SUCCESS(ovr_GetBoundaryDimensions(mSession, ovrBoundaryType::ovrBoundary_PlayArea, &dimensions))) {
+		printf("Getting boundary dimensions failed"); exit(-1);
+	}
+
 	ovrVector3f origin;
 
 	origin.x = 0;
@@ -238,19 +244,26 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	//auto trackingSpace = vr::VRCompositor()->GetTrackingSpace();
 
 	vr::VRChaperoneSetup()->RevertWorkingCopy();
-	vr::HmdMatrix34_t standingZero;
-	vr::VRChaperoneSetup()->GetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
+	vr::HmdMatrix34_t standingZero = {};
+	//vr::VRChaperoneSetup()->GetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
 	for (unsigned int i = 0; i < 3; i++) {
 		for (unsigned int j = 0; j < 4; j++) {
 			//standingZero.m[i][j] = 0;
 		}
 	}
 	//standingZero.m[1][3] = 5;
+	// Rotation to 0, 1s along diagonal I think
+	standingZero.m[0][0] = 1;
+	standingZero.m[1][1] = 1;
+	standingZero.m[2][2] = 1;
+
+	//Position
 	standingZero.m[0][3] = origin.x;
 	standingZero.m[1][3] = origin.y;
 	standingZero.m[2][3] = origin.z;
 	
 	vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
+	vr::VRChaperoneSetup()->SetWorkingPlayAreaSize(dimensions.x, dimensions.z);
 	vr::VRChaperoneSetup()->CommitWorkingCopy(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperone()->ReloadInfo();
