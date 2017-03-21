@@ -304,6 +304,8 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	quads.resize(0);
 	vr::VRChaperoneSetup()->SetWorkingCollisionBoundsInfo(quads.data(), numOfGuardianPoints);
 	vr::VRChaperoneSetup()->CommitWorkingCopy(vr::EChaperoneConfigFile_Live);
+	vr::VRSettings()->SetInt32(vr::k_pch_CollisionBounds_Section, vr::k_pch_CollisionBounds_ColorGammaA_Int32, 0);
+	vr::VRSettings()->Sync();
 	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperone()->ReloadInfo();
 	//
@@ -314,6 +316,10 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	//vr::VRChaperoneSetup()->SetWorkingCollisionBoundsInfo(quads.data(), 0);
 	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose
+
+	//ovr_Shutdown();
+
+	//vr::VR_Shutdown();
 
 
 	exit(0);
@@ -335,6 +341,7 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
         UpdateBoundaryLookAndFeel();
         UpdateObjectsCollisionWithBoundary(elapsedTimeSec);
         Render();
+		exit(0);
     }
 
 
