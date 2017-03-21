@@ -10,7 +10,7 @@ Set up Oculus Room Setup, then run this utility. You can run this utility instea
 
 ## Notes
 
-* **I did not fully test what happens if forward, as set at end of Oculus room setup, does not match the forward direction of your playspace, as set when indicating where your monitor is. The playspace may be rotated incorrectly in that case, I will look into this soon. **
+* **I did not fully test what happens if forward, as set at end of Oculus room setup, does not match the forward direction of your playspace, as set when indicating where your monitor is. The playspace may be rotated incorrectly in that case, I will look into this soon.**
 
 * Your Rift and cameras should probably be connected before running this.
 
