@@ -58,7 +58,7 @@ private:
     ovrTextureSwapChain mTextureChain[ovrEye_Count] = {};                   // OVR  - Eye render target swap chain
     ID3D11DepthStencilView* mEyeDepthTarget[ovrEye_Count] = {};             // DX11 - Eye depth view
     std::vector<ID3D11RenderTargetView*> mEyeRenderTargets[ovrEye_Count];   // DX11 - Eye render view
-	std::vector<ovrVector3f> mBoundaryPoints;
+	std::vector<ovrVector3f> mPlayPoints;
 	std::vector<ovrTrackerPose> mTrackerPoses;
 
     bool mShouldQuit = false;
@@ -174,16 +174,27 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
     //ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_FloorLevel);
 	ovr_SetTrackingOriginType(mSession, ovrTrackingOrigin_EyeLevel);
 
-	int boundaryNum;
-	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, NULL, &boundaryNum))) {
+	int numOfPlayPoints;
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, NULL, &numOfPlayPoints))) {
 		printf("Getting number of boundary points failed"); exit(-1);
 	}
 
-	mBoundaryPoints.resize(boundaryNum);
-	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, mBoundaryPoints.data(), &boundaryNum))) {
+	mPlayPoints.resize(numOfPlayPoints);
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_PlayArea, mPlayPoints.data(), &numOfPlayPoints))) {
 		printf("Getting boundary points failed"); exit(-1);
 	}
 
+	int numOfGuardianPoints;
+	std::vector<ovrVector3f> guardianPoints;
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, NULL, &numOfGuardianPoints))) {
+		printf("Getting number of guardian points failed"); exit(-1);
+	}
+
+	guardianPoints.resize(numOfGuardianPoints);
+
+	if (!OVR_SUCCESS(ovr_GetBoundaryGeometry(mSession, ovrBoundaryType::ovrBoundary_Outer, guardianPoints.data(), &numOfGuardianPoints))) {
+		printf("Getting guardian points failed"); exit(-1);
+	}
 
 	ovrVector3f dimensions;
 	if (!OVR_SUCCESS(ovr_GetBoundaryDimensions(mSession, ovrBoundaryType::ovrBoundary_PlayArea, &dimensions))) {
@@ -196,13 +207,13 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	origin.y = 0;
 	origin.z = 0;
 
-	for (unsigned int i = 0; i < mBoundaryPoints.size(); ++i) {
-		origin.x += mBoundaryPoints[i].x;
-		origin.y += mBoundaryPoints[i].y;
-		origin.z += mBoundaryPoints[i].z;
+	for (unsigned int i = 0; i < mPlayPoints.size(); ++i) {
+		origin.x += mPlayPoints[i].x;
+		origin.y += mPlayPoints[i].y;
+		origin.z += mPlayPoints[i].z;
 	}
 
-	int numOfPoints = mBoundaryPoints.size();
+	int numOfPoints = mPlayPoints.size();
 	origin.x = origin.x / (float)numOfPoints;
 	origin.y = origin.y / (float)numOfPoints;
 	origin.z = origin.z / (float)numOfPoints;
@@ -237,7 +248,6 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 		}
 	}
 
-	uint32_t quadCount;
 
 	auto chaperoneStatus = vr::VRChaperone()->GetCalibrationState(); // REQUIRED in order to do any chaperone setup
 
@@ -261,16 +271,43 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	standingZero.m[0][3] = origin.x;
 	standingZero.m[1][3] = origin.y;
 	standingZero.m[2][3] = origin.z;
+
+	uint32_t quadCount = 0;
+	vr::VRChaperoneSetup()->GetWorkingCollisionBoundsInfo(NULL, &quadCount);
+
+	std::vector<vr::HmdQuad_t> quads(numOfGuardianPoints);
+
+	for (unsigned int i = 0; i < numOfGuardianPoints; i++) {
+		unsigned int j = (i + 1) % numOfGuardianPoints;
+		quads[i].vCorners[0].v[0] = guardianPoints[i].x - origin.x;
+		quads[i].vCorners[0].v[1] = guardianPoints[i].y - origin.y;
+		quads[i].vCorners[0].v[2] = guardianPoints[i].z - origin.z;
+
+		quads[i].vCorners[1].v[0] = guardianPoints[i].x - origin.x;
+		quads[i].vCorners[1].v[1] = guardianPoints[i].y - origin.y + 2.43;
+		quads[i].vCorners[1].v[2] = guardianPoints[i].z - origin.z;
+
+		quads[i].vCorners[2].v[0] = guardianPoints[j].x - origin.x;
+		quads[i].vCorners[2].v[1] = guardianPoints[j].y - origin.y + 2.43;
+		quads[i].vCorners[2].v[2] = guardianPoints[j].z - origin.z;
+
+		quads[i].vCorners[3].v[0] = guardianPoints[j].x - origin.x;
+		quads[i].vCorners[3].v[1] = guardianPoints[j].y - origin.y;
+		quads[i].vCorners[3].v[2] = guardianPoints[j].z - origin.z;
+		
+	}
+
+
 	
 	vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose(&standingZero);
 	vr::VRChaperoneSetup()->SetWorkingPlayAreaSize(dimensions.x, dimensions.z);
+	quads.resize(0);
+	vr::VRChaperoneSetup()->SetWorkingCollisionBoundsInfo(quads.data(), numOfGuardianPoints);
 	vr::VRChaperoneSetup()->CommitWorkingCopy(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperoneSetup()->ReloadFromDisk(vr::EChaperoneConfigFile_Live);
 	//vr::VRChaperone()->ReloadInfo();
-	//vr::VRChaperoneSetup()->GetWorkingCollisionBoundsInfo(NULL, &quadCount);
-	//std::vector<vr::HmdQuad_t> quads;
-	//quads.resize(quadCount);
-	//vr::VRChaperoneSetup()->GetWorkingCollisionBoundsInfo(quads.data(), &quadCount);
+	//
+
 	//vr::HmdMatrix34_t poseMatrix;
 	//bool getPoseResult = vr::VRChaperoneSetup()->GetWorkingStandingZeroPoseToRawTrackingPose(&poseMatrix);
 	//quads.clear();
@@ -354,10 +391,10 @@ void GuardianSystemDemo::UpdateObjectsCollisionWithBoundary(float elapsedTimeSec
     for (int32_t i = 0; i < mDynamicScene.numModels; ++i) {
         XMFLOAT3 newPosition;
 		XMVECTOR newPositionVec;
-		if ((size_t)i < mBoundaryPoints.size()) {
-			newPosition.x = mBoundaryPoints[i].x;
-			newPosition.y = mBoundaryPoints[i].y;
-			newPosition.z = mBoundaryPoints[i].z;
+		if ((size_t)i < mPlayPoints.size()) {
+			newPosition.x = mPlayPoints[i].x;
+			newPosition.y = mPlayPoints[i].y;
+			newPosition.z = mPlayPoints[i].z;
 			newPositionVec = XMLoadFloat3(&newPosition);
 		}
 		else {
