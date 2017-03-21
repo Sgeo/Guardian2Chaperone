@@ -4,6 +4,8 @@
 #include "OVR_CAPI_D3D.h" // Oculus SDK
 #include "openvr.h"
 #include <vector>
+#include <thread>
+#include <chrono>
 
 
 class GuardianSystemDemo
@@ -72,6 +74,11 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 		printf("Getting boundary dimensions failed"); exit(-1);
 	}
 
+	
+	ovr_Destroy(mSession);
+
+	ovr_Shutdown();
+
 	ovrVector3f origin;
 
 	origin.x = 0;
@@ -90,7 +97,6 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	origin.z = origin.z / (float)numOfPoints;
 
 
-	//ovr_Shutdown();
 
 	vr::EVRInitError initError;
 	vr::IVRSystem* ivrSystem = vr::VR_Init(&initError, vr::EVRApplicationType::VRApplication_Scene);
@@ -149,7 +155,11 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 	vr::VRSettings()->SetInt32(vr::k_pch_CollisionBounds_Section, vr::k_pch_CollisionBounds_ColorGammaA_Int32, 0);
 	vr::VRSettings()->Sync();
 
-	ovr_Shutdown();
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+	vr::VR_Shutdown();
+
+
 
 
     
