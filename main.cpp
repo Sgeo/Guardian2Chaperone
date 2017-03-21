@@ -172,7 +172,6 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
     
 
-    ovr_Shutdown();
 
 
 }
