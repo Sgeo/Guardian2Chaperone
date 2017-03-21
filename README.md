@@ -16,6 +16,8 @@ Set up Oculus Room Setup, then run this utility. You can run this utility instea
 
 * This turns the SteamVR bounds invisible. Keep Oculus Guardian on, or make the SteamVR bounds visible in the SteamVR customization menu. The SteamVR bounds will match Oculus bounds, but might look ugly.
 
+* The Oculus play space may be smaller than SteamVR's usual minimum play space. The utility will set the SteamVR play space to match Oculus, but the utility will give no notice that this has occurred, and I cannot predict how SteamVR applications will react.
+
 ## Credits
 
 * Oculus's GuardianSystemDemo used as a starting point, but almost none of that code remains.
