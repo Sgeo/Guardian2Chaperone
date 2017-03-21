@@ -8,10 +8,10 @@
 #include <chrono>
 
 
-class GuardianSystemDemo
+class Guardian2Chaperone
 {
 public:
-    void Start(HINSTANCE hinst);
+    void Start();
 
 
 };
@@ -20,7 +20,7 @@ public:
 
 
 
-void GuardianSystemDemo::Start(HINSTANCE hinst)
+void Guardian2Chaperone::Start()
 {
 
 	ovrSession mSession = nullptr;
@@ -99,11 +99,11 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
 
 	vr::EVRInitError initError;
-	vr::IVRSystem* ivrSystem = vr::VR_Init(&initError, vr::EVRApplicationType::VRApplication_Scene);
+	vr::VR_Init(&initError, vr::EVRApplicationType::VRApplication_Scene);
 
 
 
-	auto chaperoneStatus = vr::VRChaperone()->GetCalibrationState(); // REQUIRED in order to do any chaperone setup
+	vr::VRChaperone()->GetCalibrationState(); // REQUIRED in order to do any chaperone setup
 
 
 	vr::VRChaperoneSetup()->RevertWorkingCopy();
@@ -125,18 +125,18 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
 	std::vector<vr::HmdQuad_t> quads(numOfGuardianPoints);
 
-	for (unsigned int i = 0; i < numOfGuardianPoints; i++) {
-		unsigned int j = (i + 1) % numOfGuardianPoints;
+	for (int i = 0; i < numOfGuardianPoints; i++) {
+		int j = (i + 1) % numOfGuardianPoints;
 		quads[i].vCorners[0].v[0] = guardianPoints[i].x - origin.x;
 		quads[i].vCorners[0].v[1] = guardianPoints[i].y - origin.y;
 		quads[i].vCorners[0].v[2] = guardianPoints[i].z - origin.z;
 
 		quads[i].vCorners[1].v[0] = guardianPoints[i].x - origin.x;
-		quads[i].vCorners[1].v[1] = guardianPoints[i].y - origin.y + 2.43;
+		quads[i].vCorners[1].v[1] = guardianPoints[i].y - origin.y + 2.43f;
 		quads[i].vCorners[1].v[2] = guardianPoints[i].z - origin.z;
 
 		quads[i].vCorners[2].v[0] = guardianPoints[j].x - origin.x;
-		quads[i].vCorners[2].v[1] = guardianPoints[j].y - origin.y + 2.43;
+		quads[i].vCorners[2].v[1] = guardianPoints[j].y - origin.y + 2.43f;
 		quads[i].vCorners[2].v[2] = guardianPoints[j].z - origin.z;
 
 		quads[i].vCorners[3].v[0] = guardianPoints[j].x - origin.x;
@@ -180,9 +180,9 @@ void GuardianSystemDemo::Start(HINSTANCE hinst)
 
 
 
-int WINAPI WinMain(HINSTANCE hinst, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    GuardianSystemDemo* instance = new (_aligned_malloc(sizeof(GuardianSystemDemo), 16)) GuardianSystemDemo();
-    instance->Start(hinst);
+    Guardian2Chaperone* instance = new (_aligned_malloc(sizeof(Guardian2Chaperone), 16)) Guardian2Chaperone();
+    instance->Start();
     return 0;
 }
