@@ -20,6 +20,8 @@ Set up Oculus Room Setup, then run this utility. You can run this utility instea
 
 * The Oculus play space may be smaller than SteamVR's usual minimum play space. The utility will set the SteamVR play space to match Oculus, but the utility will give no notice that this has occurred, and I cannot predict how SteamVR applications will react.
 
+* This is for Rift users of SteamVR. If you use both Rift and Vive, I believe only Rift's SteamVR setup will be altered. The Vive's settings may be maintained separately.
+
 * I have no idea what happens if a Vive user using Revive runs this. It might be entertaining, but I doubt of any practical use.
 
 ## Credits
