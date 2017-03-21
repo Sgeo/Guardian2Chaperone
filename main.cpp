@@ -174,6 +174,5 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE, LPSTR, int)
 {
     GuardianSystemDemo* instance = new (_aligned_malloc(sizeof(GuardianSystemDemo), 16)) GuardianSystemDemo();
     instance->Start(hinst);
-    delete instance;
     return 0;
 }
