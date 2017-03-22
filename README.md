@@ -22,6 +22,8 @@ Set up Oculus Room Setup, then run this utility. You can run this utility instea
 
 * This is for Rift users of SteamVR. If you use both Rift and Vive, I believe only Rift's SteamVR setup will be altered. The Vive's settings may be maintained separately.
 
+* If you recenter while in Oculus Home, the position of the play space shifts. This is a SteamVR limitation, and rerunning this tool will put the play space in the proper location. Not being aware of this can be actively dangerous if you disable Oculus Guardian and rely only on SteamVR Chaperone.
+
 * I have no idea what happens if a Vive user using Revive runs this. It might be entertaining, but I doubt of any practical use.
 
 ## Credits
