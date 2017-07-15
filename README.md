@@ -6,7 +6,7 @@ This utility transfers the Oculus Room Setup data to SteamVR for Oculus Rift. It
 
 ## Usage
 
-Set up Oculus Room Setup, then run this utility. You can run this utility instead of running SteamVR Room Setup
+Set up Oculus Room Setup, then run this utility, which can be downloaded from the [releases section](https://github.com/Sgeo/Guardian2Chaperone/releases). You can run this utility instead of running SteamVR Room Setup
 
 ## Notes
 
