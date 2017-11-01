@@ -1,3 +1,5 @@
+**Note that with recent SteamVR changes, this program is mostly obsolete. SteamVR seems to read the Oculus configuration as soon as it starts.**
+
 # Guardian2Chaperone
 
 ## Purpose
